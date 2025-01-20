@@ -1,0 +1,58 @@
+echo "Build_start_time: ${BUILD_TIMESTAMP}"
+
+def Images = params.Image
+dockerImage = Images.replace("\n", ",")
+echo "Image: ${dockerImage}"
+def Hardening_score = params.Threshold
+echo "CIS_benchmark Threshold: ${Hardening_score}"
+
+node ('INBLRCYBDTRCHP90') {
+
+
+stage('Notify Approver'){
+
+                            echo'Vulnerabilities found for image blr-artifactory.apps.ge-healthcare.net/docker-cyberlab-dev/testing/shridhar/redis-sentinel:7.4.0-debian-12-r5: total - 8, critical - 0, high - 0, medium - 0, low - 8'
+                            echo'Compliance found for image blr-artifactory.apps.ge-healthcare.net/docker-cyberlab-dev/testing/shridhar/redis-sentinel:7.4.0-debian-12-r5: total - 1, critical - 0, high - 1, medium - 0, low - 0'
+                            echo'Vulnerabilities found for image redis-sentinel:7.4.0-debian-12-r5_harden: total - 9, critical - 0, high - 0, medium - 0, low - 9'
+                            echo'Compliance found for image redis-sentinel:7.4.0-debian-12-r5_harden: total - 0, critical - 0, high - 0, medium - 0, low - 0'
+                            echo'Vulnerabilities found for image blr-artifactory.apps.ge-healthcare.net/docker-cyberlab-dev/redis-sentinel:7.4.0-debian-12-r5_harden_2024-09-25-13_19_54: total - 9, critical - 0, high - 0, medium - 0, low - 9'
+                            echo'Compliance found for image blr-artifactory.apps.ge-healthcare.net/docker-cyberlab-dev/redis-sentinel:7.4.0-debian-12-r5_harden_2024-09-25-13_19_54: total - 0, critical - 0, high - 0, medium - 0, low - 0'
+                        script {
+                            def Harden_Image = 'blr-artifactory.apps.ge-healthcare.net/docker-cyberlab-dev/redis-sentinel:7.4.0-debian-12-r5_harden_2024-09-25-13_19_54'
+                  
+                     env.HardenImage1=Harden_Image
+                  println(Harden_Image)
+                  println(HardenImage1)
+                 }
+
+                            echo 'Release Twistlock Scan Pass. Approval Mail to be Triggered *****'                              
+                            emailext attachLog: true,
+                            attachmentsPattern:'Release_TwistlockOutput3.*',
+
+                            to: "503357954@gehealthcare.com,cc:503357954@gehealthcare.com",
+                            subject: "[${env.BUILD_NUMBER}] Release Pipeline | Approval Request | ${env.Image_First} ",
+                            body: 
+                                '''
+                                </b></p>Job_name=${JOB_NAME}, 
+                                </b></p>Build_number=${BUILD_NUMBER},
+                                </b></p>Build_timestamp=${BUILD_TIMESTAMP},
+                                
+                                <table style="border: 1px solid #000000;"> 
+                                    <tr><th>HardenImage at Dev</th><td style="border: 1px solid #000000;"> </td></tr>
+                                </table>
+                                <br>
+                         /       </p><b>Post Harden Twistlock Scan</b></p>
+                                </p><b>================================================================================================================</b></p>
+                                </p>${BUILD_LOG_REGEX, regex=".*(Vulnerabilities found.*_harden_.*low - [0-9]*).*", linesBefore=0, linesAfter=0, maxMatches=1, showTruncatedLines=false, escapeHtml=true, matchedLineHtmlStyle=true, substText="$1"}</p>
+
+                                 </p><b>================================================================================================================</b></p>  
+                                    
+                                <b></p>Click <a href="${BUILD_URL}/input/">${JOB_NAME}:${BUILD_NUMBER}</a> to Approve/Deny Harden Image push to Release Artifactory </p></b>
+                                <br>
+                                </p>If you have any questions please reach out to DevSecOpsDTRCoreDev@ge.com</p>
+
+                                <p>Regards,<br>DTR Core Team</p>
+                 '''                   
+
+}
+}
